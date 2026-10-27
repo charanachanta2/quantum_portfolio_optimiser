@@ -38,15 +38,16 @@
   ],
   "logical_p_phys": 0.001,
   "logical_distance": 7,
-  "seed": 0
+  "seed": 0,
+  "mu_source": "historical",
+  "lstm_blend": 0.5,
+  "risk_source": "vix",
+  "kappa_risk": 0.5
  },
  "fast": false,
  "seed": 0,
  "stages_last_run": [
-  "backtest",
-  "ablation",
-  "scaling",
-  "summary"
+  "resources"
  ],
  "python": "3.11.8",
  "packages": {
@@ -57,16 +58,16 @@
   "pymatching": "2.4.0",
   "torch": "2.14.1+cpu",
   "gurobipy": "13.0.3",
-  "yfinance": "1.2.0",
+  "yfinance": "1.7.0",
   "qiskit": "2.6.1",
-  "dimod": null
+  "dimod": "0.12.23"
  },
  "optional_methods_available": {
   "cvar_gurobi_sub": true,
   "miqp_gurobi_full": true,
   "rl_torch_full": true
  },
- "unix_time": 1792980657,
+ "unix_time": 1793081806,
  "data_source": "yahoo+fred+esg",
  "data_meta": {
   "requested_tickers": [

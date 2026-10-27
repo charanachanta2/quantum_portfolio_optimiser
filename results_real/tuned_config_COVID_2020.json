@@ -16,8 +16,8 @@
    ]
   ],
   "criterion": "mean net Sharpe of exact_qubo",
-  "val_sharpe_best": 0.9052696355515153,
-  "val_sharpe_median_grid": 0.7385652051627692,
+  "val_sharpe_best": 0.9052741563345279,
+  "val_sharpe_median_grid": 0.7385694967622873,
   "data_source": "yahoo+fred+esg",
   "grid": {
    "lambda0": [
