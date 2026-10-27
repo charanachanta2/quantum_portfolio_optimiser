@@ -1,0 +1,27 @@
+# ---- core (tested versions in comments; see requirements-lock.txt for the full set used to run the test-suite) ----
+numpy>=1.26,<2.5
+scipy>=1.11
+pandas>=2.0,<3.1
+matplotlib>=3.8
+stim>=1.13
+pymatching>=2.2
+streamlit>=1.50          # `width="stretch"` and st.fragment(run_every=...) are used
+plotly>=5.20
+pytest>=8.0
+yfinance>=0.2.40         # live feed + market strip (network); everything falls back to the shipped snapshot when offline
+# ---- stock-prediction system (LSTM) - E5: pinned so it coexists with numpy 2.x, torch and Gurobi in ONE environment ----
+tensorflow-cpu>=2.18,<2.22   # tested: 2.21.0 with keras 3.15 / numpy 2.4 / python 3.12.  Use plain `tensorflow` if you have a GPU.
+flask>=3.0               # original web UI (python -m stock_prediction.flask_app)
+scikit-learn>=1.4
+joblib>=1.3
+# ---- optional ----
+qiskit>=1.2              # cross-validation test of the simulator
+gurobipy>=11.0           # classical stochastic-programming baseline (pip licence is size-limited, fine here)
+torch>=2.3               # PyTorch RL baseline (rl_torch_full); >=2.3 is the first release built for NumPy 2
+pyarrow>=17              # keeps pandas from loading an old NumPy-1-only pyarrow
+# optional demos:
+# dwave-ocean-sdk        # scripts/optional_ocean_sa.py
+# qiskit-aer             # noisy simulation in scripts/optional_qiskit_qaoa.py
+playwright>=1.40         # scripts/screenshots*.py  (then: python -m playwright install chromium)
+tabulate>=0.9
+reportlab>=4.0

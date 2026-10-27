@@ -1,0 +1,31 @@
+ticker,company_to_search,score
+AAPL,"Apple Inc.",32
+MSFT,"Microsoft Corporation",46
+JNJ,"Johnson & Johnson",Under Review
+PG,"Procter & Gamble",44
+KO,"Coca-Cola Company",42
+PEP,"PepsiCo",45
+XOM,"Exxon Mobil",33
+CVX,"Chevron",34
+JPM,"JPMorgan Chase",32
+WFC,"Wells Fargo",30
+INTC,"Intel",52
+CSCO,"Cisco Systems",58
+MRK,"Merck & Co.",45
+PFE,"Pfizer",48
+WMT,"Walmart",38
+HD,"Home Depot",36
+VZ,"Verizon Communications",41
+T,"AT&T",39
+IBM,"International Business Machines",56
+ORCL,"Oracle",35
+C,"Citigroup",36
+BAC,"Bank of America",38
+GS,"Goldman Sachs",34
+GE,"General Electric (GE Aerospace)",42
+F,"Ford Motor",44
+AIG,"American International Group",28
+CAT,"Caterpillar",39
+DIS,"Walt Disney",33
+MCD,"McDonald's",35
+BA,"Boeing",26

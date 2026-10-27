@@ -1,0 +1,37 @@
+{
+ "data_source": "yahoo+fred+esg",
+ "variants": {
+  "historical": {
+   "mu_source": "historical",
+   "risk_source": "vix"
+  },
+  "lstm": {
+   "mu_source": "lstm",
+   "risk_source": "vix"
+  },
+  "blend": {
+   "mu_source": "blend",
+   "risk_source": "vix"
+  },
+  "blend+fuzzy": {
+   "mu_source": "blend",
+   "risk_source": "vix+fuzzy"
+  }
+ },
+ "methods": [
+  "equal_weight_full",
+  "cvar_sub",
+  "miqp_sub",
+  "exact_qubo",
+  "sa_qubo",
+  "qaoa_noisy_mitigated",
+  "qaoa_logical"
+ ],
+ "fast": false,
+ "models": [
+  "2007-12-31",
+  "2008-12-31",
+  "2018-12-31",
+  "2019-12-31"
+ ]
+}

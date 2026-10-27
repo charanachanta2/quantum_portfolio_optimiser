@@ -1,0 +1,222 @@
+{
+ "data_tag": "SYNTHETIC DATA",
+ "status": [
+  "Built and tested offline: QUBO, QAOA, noise, DD/ZNE/PEC, resource estimator + sweeps, MIQP (exact DP), stats, theory, data-loader safeguards (mocked)",
+  "Needs your machine: real Yahoo/FRED/ESG data, Stim re-run, PyTorch agent test, Gurobi MIQP test, dashboard screenshots",
+  "Honest claim: rigorous bounds plus an empirical test; no quantum advantage shown at n up to 16"
+ ],
+ "steps": [
+  {
+   "title": "The big picture",
+   "sub": "How the whole code runs, end to end",
+   "bullets": [
+    "Data comes in: prices, VIX, ESG scores.",
+    "Every month we estimate returns (mu) and risk (Sigma).",
+    "We turn 'choose the best weights' into a QUBO: a yes/no puzzle over bits.",
+    "QAOA (a quantum circuit) tries to find the lowest-energy bit pattern.",
+    "Noise is added, then error mitigation or logical qubits are applied.",
+    "Classical solvers (exact, SA, MIQP, CVaR, RL) solve the same problem; a walk-forward backtest compares all of them."
+   ],
+   "img": "figs/01_architecture.png",
+   "cap": "run_all.py calls each box in this order, one command per stage.",
+   "take": "Each box is one file in qpo/. Numbers in this deck: SYNTHETIC DATA."
+  },
+  {
+   "title": "Step 1 - Data",
+   "sub": "qpo/data.py, scripts/fetch_data.py, scripts/build_esg.py",
+   "bullets": [
+    "Real mode: fetch_data.py freezes Yahoo prices and FRED series to csv; every later stage runs offline from that snapshot.",
+    "ESG: build_esg.py converts Sustainalytics risk scores (lower = better) into a percentile score where higher = better.",
+    "Safeguards: macro series are never back-filled, truncated FRED series are dropped, pseudo-ESG is refused.",
+    "Offline mode: a synthetic market with calm and stress regimes and forced 2008-like and 2020-like crises (figure).",
+    "This deck was built from: SYNTHETIC DATA (meta.json data_source = synthetic)."
+   ],
+   "img": "figs/02_market.png",
+   "cap": "Figure is the synthetic market used for tests and demos.",
+   "take": "Real runs must report survivorship bias and static-ESG look-ahead."
+  },
+  {
+   "title": "Step 2 - Estimate return and risk",
+   "sub": "qpo/backtest.py make_instance()",
+   "bullets": [
+    "Use the last 252 trading days only (no look-ahead).",
+    "Expected return mu = half the asset's own mean + half the universe mean (shrinkage).",
+    "Covariance Sigma is shrunk 20% toward its diagonal.",
+    "ESG hard filter: assets with ESG < 40 are removed first.",
+    "Greedy pick of 3-4 assets (best Sharpe, low correlation) to fit on qubits.",
+    "VIX z-score sets risk aversion lambda_t and the weight cap (50% calm, 33% stress)."
+   ],
+   "img": null,
+   "cap": "lambda_t = 6 x (1 + 0.5 x VIX_z).  Stress: cap drops from 3/6 to 2/6.",
+   "take": "Time-varying constraints come from this one step."
+  },
+  {
+   "title": "Step 3 - Build the QUBO",
+   "sub": "qpo/qubo.py build_qubo()",
+   "bullets": [
+    "A QUBO is: minimise x^T Q x with every x a bit.",
+    "Each weight = level/6, level = b0 + 2*b1: two bits per asset per period.",
+    "3 assets x 2 bits x 2 periods = 12 qubits (4096 candidate answers).",
+    "Q mixes: -return, +risk, +transaction cost, +budget penalty, +cap penalty, -ESG tilt.",
+    "Tests: Q matches the direct objective, and its optimum equals the hard-budget MIQP optimum."
+   ],
+   "img": "figs/03_qubo.png",
+   "cap": "Heatmap of Q for the 2008-10-15 instance (synthetic market).",
+   "take": "Red/blue cells are the couplings the circuit must encode."
+  },
+  {
+   "title": "Step 4 - QAOA (the quantum part)",
+   "sub": "qpo/qaoa.py",
+   "bullets": [
+    "Start in an equal superposition of all bitstrings.",
+    "Repeat p times: a cost phase then an RX mixer.",
+    "Two angles per layer are tuned by COBYLA.",
+    "Adaptive depth: add layers (up to 3) only while the improvement exceeds 1%.",
+    "Sample bitstrings, evaluate their true energy classically, keep the best."
+   ],
+   "img": "figs/04_qaoa.png",
+   "cap": "Optimum energy -0.031, random mean 2.149, QAOA (p=1) mean 0.663.",
+   "take": "P(optimum) = 0.0009 vs uniform 0.00024: boosted, but the optimum stays unlikely."
+  },
+  {
+   "title": "Step 5 - Noise (NISQ+ model)",
+   "sub": "qpo/noise.py",
+   "bullets": [
+    "Gate, idle and readout errors are turned into an independent bit-flip probability q per qubit on the output string.",
+    "On this instance q is 0.026 (raw), 0.025 (with DD) and 1.0e-06 (logical).",
+    "Phenomenological model, not hardware truth."
+   ],
+   "img": "figs/05_noise.png",
+   "cap": "Energy 0.663 (ideal) -> 0.780 (raw).",
+   "take": "Dynamical decoupling only trims idle error, so it helps a little."
+  },
+  {
+   "title": "Step 6a - Zero-noise extrapolation (ZNE)",
+   "sub": "qpo/qaoa.py estimate_energy(method='zne')",
+   "bullets": [
+    "Run at 1x, 2x and 3x noise.",
+    "Fit a curve and read it at 0x.",
+    "Cost: more runs and variance inflated by 19x (Richardson weights 3, -3, 1)."
+   ],
+   "img": "figs/06_zne.png",
+   "cap": "Raw 0.7798 -> ZNE 0.7089 (ideal 0.6629).",
+   "take": "ZNE reduces the bias but not completely."
+  },
+  {
+   "title": "Step 6b - Probabilistic error cancellation (PEC)",
+   "sub": "qpo/qaoa.py + qpo/theory.py",
+   "bullets": [
+    "The channel is known, so we apply its inverse with signed random samples.",
+    "On this instance PEC gives 0.6629 (ideal 0.6629): unbiased.",
+    "Price: gamma = (1-2q)^(-n); shots grow as gamma^2."
+   ],
+   "img": "figs/07_pec.png",
+   "cap": "n=12 at this q: gamma^2 = 3.6.  n=100, q=0.03: gamma^2 = 2.37e+05.",
+   "take": "This is why logical qubits are needed at scale."
+  },
+  {
+   "title": "Step 7 - Logical qubits with Stim",
+   "sub": "qpo/qec.py",
+   "bullets": [
+    "Stim simulates the rotated surface code memory experiment, PyMatching decodes (d = 3, 5, 7).",
+    "Fit: p_L/round = A (p/p_th)^((d+1)/2) with A = 0.044, p_th = 0.0099 (9 points).",
+    "Logical mode injects the fitted logical flip rate into the small QAOA simulation.",
+    "Stim covers memory only; QAOA's non-Clifford gates are not simulated at code level."
+   ],
+   "img": "figs/12_qec.png",
+   "cap": "Data exist for p = 2e-3..6e-3 only; lower p is an extrapolation.",
+   "take": "Say this clearly in the report."
+  },
+  {
+   "title": "Step 8 - Resource estimation",
+   "sub": "qpo/qec.py estimate_resources(), scripts/resource_sweep.py",
+   "bullets": [
+    "Count rotations -> T gates, choose distance d, add T-factory area; failure budget split three ways (logical, synthesis, magic states).",
+    "n=16, p=1e-3: 75,576 physical qubits (range 49,232 - 88,758).",
+    "n=120, p=1e-3: 539,604 (range 183,480 - 1,180,620); needs 2-level distillation.",
+    "All constants are swept (assumptions table, tornado plot). Runtime is T-supply bound."
+   ],
+   "img": "figs/08_resources.png",
+   "cap": "Report item (a).",
+   "take": "Better hardware (p=1e-4) cuts the qubit count several-fold."
+  },
+  {
+   "title": "Step 9 - Error-mitigation ablation",
+   "sub": "scripts/ablation.py",
+   "bullets": [
+    "Each mitigation is switched on separately and in combination (9 configurations).",
+    "Raw error 0.112; ZNE 0.055; PEC 0.038.",
+    "DD+ZNE 0.045; DD+PEC 0.038; logical (d=7) 0.007.",
+    "Sampling overhead: ZNE 57x, PEC 12x."
+   ],
+   "img": "figs/09_ablation.png",
+   "cap": "Report item (b).",
+   "take": "Mitigation helps estimation; logical qubits help most."
+  },
+  {
+   "title": "Step 10 - Classical baselines",
+   "sub": "qpo/classical.py, qpo/miqp.py, qpo/rl_torch.py",
+   "bullets": [
+    "exact_qubo: brute force = true QUBO optimum (ceiling for QUBO solvers). sa_qubo: simulated annealing.",
+    "miqp_sub: hard-budget discrete problem, Gurobi MIQP if installed, else an exact DP (same optimum, cross-tested).",
+    "CVaR stochastic programs in HiGHS (and Gurobi when installed); equal weight.",
+    "RL: NumPy evolution-strategy agent; PyTorch REINFORCE agent written but NOT run in this build."
+   ],
+   "img": null,
+   "cap": "CVaR minimises average loss in the worst 10% of scenarios.",
+   "take": "The exact optimum lets us measure how far QAOA is from perfect."
+  },
+  {
+   "title": "Step 11 - Walk-forward backtest",
+   "sub": "qpo/backtest.py run_backtest()",
+   "bullets": [
+    "Every rebalance: build the QUBO from past data only, solve, trade, pay costs, hold.",
+    "Methods: 11.",
+    "GFC_2008: best classical cvar_sub Sharpe 1.17; QAOA logical 1.16; equal weight 0.67.",
+    "COVID_2020: best classical cvar_full Sharpe 0.37; QAOA logical -0.01; equal weight -0.34.",
+    "QUBO solvers differ little: the problem is tiny and the exact optimum is the ceiling."
+   ],
+   "img": "figs/11_backtest.png",
+   "cap": "SYNTHETIC DATA. These numbers say nothing about real markets.",
+   "take": "Tests confirm there is no look-ahead."
+  },
+  {
+   "title": "Step 12 - Statistical significance",
+   "sub": "qpo/stats.py",
+   "bullets": [
+    "Paired stationary bootstrap on the Sharpe difference; Wilcoxon on per-period returns; Holm correction.",
+    "Result: 0 of 28 (GFC) and 0 of 28 (COVID) differences are significant.",
+    "Example: qaoa_ideal vs cvar_sub in 2008: diff -0.13, 95% CI [-0.48, +0.32].",
+    "Wide intervals mean low power: not significant is not the same as equal."
+   ],
+   "img": null,
+   "cap": "Report item (c).",
+   "take": "No claim of quantum outperformance is supported by this table."
+  },
+  {
+   "title": "Step 13 - Scaling and theory bounds",
+   "sub": "qpo/theory.py, docs/THEORY.md, scripts/scaling.py",
+   "bullets": [
+    "P1 noisy success >= ideal x (1-q)^n.  P2 Hoeffding shots.  P3 PEC cost gamma^2 (n=100, q=0.03: 2.4e5).  P4 ZNE variance x19.  P5 random baseline 2^n.  P6 noise budget shrinks like 1/n.",
+    "Empirical exponents (cost ~ 2^(s n)): QAOA 0.86, SA 0.43, random 1.00, Grover 0.50.",
+    "Six sizes, n <= 16: trend evidence only."
+   ],
+   "img": "figs/10_scaling.png",
+   "cap": "Honest result: the bounds are rigorous; an advantage is not shown.",
+   "take": "Grover's sqrt(2^n) curve is a reference line only."
+  },
+  {
+   "title": "Step 14 - Live dashboard",
+   "sub": "dashboard/app.py, qpo/live.py, scripts/screenshots.py",
+   "bullets": [
+    "Streamlit app replays market data tick by tick (synthetic or the real snapshot, with a banner saying which).",
+    "Every N ticks it rebuilds the QUBO from data seen so far and re-solves with each chosen method.",
+    "Shows P&L lines, weight bars and a table of solver gaps.",
+    "Screenshots below are from an EARLIER build on synthetic data; regenerate with scripts/screenshots.py."
+   ],
+   "img": "figs/13_dash_live.png",
+   "cap": "Screenshot: 2008 replay, synthetic data, earlier build.",
+   "take": "Report item (d)."
+  }
+ ]
+}

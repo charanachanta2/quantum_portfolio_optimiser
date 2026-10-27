@@ -1,0 +1,41 @@
+{
+ "lambda0": 6.0,
+ "kappa_vix": 0.0,
+ "esg_tilt": 0.002,
+ "tc_quad": 0.02,
+ "_meta": {
+  "target": "GFC_2008",
+  "validation_windows": [
+   [
+    "2006-01-01",
+    "2007-09-30"
+   ]
+  ],
+  "criterion": "mean net Sharpe of exact_qubo",
+  "val_sharpe_best": 1.9291541820077738,
+  "val_sharpe_median_grid": 1.7773520760556403,
+  "data_source": "yahoo+fred+esg",
+  "grid": {
+   "lambda0": [
+    3.0,
+    6.0,
+    10.0
+   ],
+   "kappa_vix": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "esg_tilt": [
+    0.0,
+    0.002,
+    0.01
+   ],
+   "tc_quad": [
+    0.005,
+    0.02,
+    0.05
+   ]
+  }
+ }
+}

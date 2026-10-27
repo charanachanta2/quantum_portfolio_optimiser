@@ -1,0 +1,101 @@
+{
+ "data_source": "synthetic",
+ "data_meta": {
+  "dropped_tickers": [],
+  "macro_coverage": {
+   "VIX": 1.0,
+   "T10Y2Y": 1.0,
+   "HY_OAS": 1.0
+  },
+  "dropped_macro": [],
+  "esg_missing": []
+ },
+ "n_assets": 16,
+ "first_date": "2004-01-02",
+ "last_date": "2023-12-29",
+ "tuned_config_used": {
+  "GFC_2008": null,
+  "COVID_2020": null
+ },
+ "methods": [
+  "equal_weight_full",
+  "cvar_full",
+  "cvar_sub",
+  "miqp_sub",
+  "rl_es_full",
+  "exact_qubo",
+  "sa_qubo",
+  "qaoa_ideal",
+  "qaoa_noisy_raw",
+  "qaoa_noisy_mitigated",
+  "qaoa_logical"
+ ],
+ "config": {
+  "n_assets": 4,
+  "n_bits": 2,
+  "n_periods": 2,
+  "units": 6,
+  "rebalance_days": 21,
+  "lookback": 252,
+  "lambda0": 6.0,
+  "kappa_vix": 0.5,
+  "cap_levels_calm": 3,
+  "cap_levels_stress": 2,
+  "stress_z": 1.0,
+  "tc_bps": 10.0,
+  "tc_quad": 0.02,
+  "budget_pen": 2.0,
+  "cap_pen": 2.0,
+  "esg_min": 40.0,
+  "esg_tilt": 0.002,
+  "cvar_alpha": 0.9,
+  "cvar_rho": 0.5,
+  "miqp_time_limit": 30.0,
+  "rl_epochs": 120,
+  "rl_hidden": 16,
+  "p_max": 3,
+  "shots": 2048,
+  "opt_maxiter": 60,
+  "adapt_tol": 0.01,
+  "p2": 0.003,
+  "p1": 0.0003,
+  "p_readout": 0.01,
+  "idle_rate": 0.002,
+  "dd_suppression": 0.9,
+  "zne_scales": [
+   1.0,
+   2.0,
+   3.0
+  ],
+  "logical_p_phys": 0.001,
+  "logical_distance": 7,
+  "seed": 0
+ },
+ "fast": false,
+ "seed": 0,
+ "stages_last_run": [
+  "backtest",
+  "ablation",
+  "scaling",
+  "summary"
+ ],
+ "python": "3.12.3",
+ "packages": {
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "pandas": "3.0.2",
+  "stim": null,
+  "pymatching": null,
+  "torch": null,
+  "gurobipy": null,
+  "yfinance": null,
+  "qiskit": null,
+  "dimod": null
+ },
+ "optional_methods_available": {
+  "cvar_gurobi_sub": false,
+  "miqp_gurobi_full": false,
+  "rl_torch_full": false
+ },
+ "unix_time": 1792924786
+}

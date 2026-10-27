@@ -1,0 +1,5 @@
+variant,n_tests,n_significant_holm
+historical,10,0
+lstm,10,0
+blend,10,0
+blend+fuzzy,10,0

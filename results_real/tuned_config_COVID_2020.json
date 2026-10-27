@@ -1,0 +1,45 @@
+{
+ "lambda0": 10.0,
+ "kappa_vix": 1.0,
+ "esg_tilt": 0.0,
+ "tc_quad": 0.005,
+ "_meta": {
+  "target": "COVID_2020",
+  "validation_windows": [
+   [
+    "2012-01-01",
+    "2013-12-31"
+   ],
+   [
+    "2016-01-01",
+    "2018-06-30"
+   ]
+  ],
+  "criterion": "mean net Sharpe of exact_qubo",
+  "val_sharpe_best": 0.9052696355515153,
+  "val_sharpe_median_grid": 0.7385652051627692,
+  "data_source": "yahoo+fred+esg",
+  "grid": {
+   "lambda0": [
+    3.0,
+    6.0,
+    10.0
+   ],
+   "kappa_vix": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "esg_tilt": [
+    0.0,
+    0.002,
+    0.01
+   ],
+   "tc_quad": [
+    0.005,
+    0.02,
+    0.05
+   ]
+  }
+ }
+}

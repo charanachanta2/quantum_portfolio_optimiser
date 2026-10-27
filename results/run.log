@@ -1,0 +1,36 @@
+data source: synthetic; assets=16; days=5216
+[1/5] Stim surface-code sweep
+  p_th~0.0099; logical flip prob per layer at d=7, p=0.001: 1.59e-05
+[2/5] resource estimation
+[3/5] walk-forward backtests
+ period GFC_2008
+Restricted license - for non-production use only - expires 2027-11-29
+  rebalance 1/25  2008-01-01  elapsed 4s
+  rebalance 6/25  2008-05-27  elapsed 49s
+  rebalance 11/25  2008-10-21  elapsed 87s
+  rebalance 16/25  2009-03-17  elapsed 117s
+  rebalance 21/25  2009-08-11  elapsed 172s
+  rebalance 25/25  2009-12-07  elapsed 216s
+ period COVID_2020
+  rebalance 1/19  2019-07-01  elapsed 2s
+  rebalance 6/19  2019-11-25  elapsed 34s
+  rebalance 11/19  2020-04-20  elapsed 66s
+  rebalance 16/19  2020-09-14  elapsed 108s
+  rebalance 19/19  2020-12-10  elapsed 139s
+[4/5] error-mitigation ablation
+  ablation instance 1/8 done
+  ablation instance 2/8 done
+  ablation instance 3/8 done
+  ablation instance 4/8 done
+  ablation instance 5/8 done
+  ablation instance 6/8 done
+  ablation instance 7/8 done
+  ablation instance 8/8 done
+[5/5] scaling study
+  scaling n=6 done
+  scaling n=8 done
+  scaling n=10 done
+  scaling n=12 done
+  scaling n=14 done
+  scaling n=16 done
+done -> results/RESULTS.md

@@ -1,0 +1,13 @@
+circuit,p_phys,scenario,distance,physical_qubits,time_per_shot_ms,distill_levels,note
+"small n=16 (A=4,T=2,p=3)",0.001,optimistic,9,49232,5.121957639621413,1,
+"small n=16 (A=4,T=2,p=3)",0.001,baseline,15,75576,326.6175886135394,1,
+"small n=16 (A=4,T=2,p=3)",0.001,pessimistic,21,108438,8173.033984943283,1,
+"small n=16 (A=4,T=2,p=3)",0.0001,optimistic,5,15184,2.8455320220118963,1,
+"small n=16 (A=4,T=2,p=3)",0.0001,baseline,7,16440,152.4215413529851,1,
+"small n=16 (A=4,T=2,p=3)",0.0001,pessimistic,9,19878,3502.728850689978,1,
+"large n=120 (A=20,T=3,p=3)",0.001,optimistic,15,183480,541.3093695956134,1,
+"large n=120 (A=20,T=3,p=3)",0.001,baseline,21,539604,57990.70811667789,2,
+"large n=120 (A=20,T=3,p=3)",0.001,pessimistic,27,1180620,1939097.5827432033,2,
+"large n=120 (A=20,T=3,p=3)",0.0001,optimistic,7,39864,252.61103914461958,1,
+"large n=120 (A=20,T=3,p=3)",0.0001,baseline,9,52308,12426.58031071669,1,
+"large n=120 (A=20,T=3,p=3)",0.0001,pessimistic,13,146670,311250.32029211905,1,
