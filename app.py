@@ -19,6 +19,7 @@ from qpo.universe import UNIVERSES
 from qpo.live import LiveOptimizer, solve_now
 from qpo.bgrun import Job, StreamJob
 from qpo import dash_data as DD, qec
+from qpo import advisor as ADV, advisor_ui
 from qpo.backtest import QUANTUM
 
 st.set_page_config(page_title="Quantum Portfolio Optimizer + Stock Prediction", layout="wide")
@@ -89,6 +90,20 @@ with st.sidebar:
     classical = st.multiselect("Classical comparators", ["exact_qubo", "sa_qubo", "miqp_sub", "cvar_sub", "equal_weight_full"],
                                default=["exact_qubo", "miqp_sub", "cvar_sub", "equal_weight_full"], format_func=lambda m: METHOD_LABELS[m])
     refresh = st.slider("Market-strip refresh (s)", 10, 300, 60)
+    st.subheader("Gemini advisor")
+    gemini_key = st.text_input("Gemini API key (optional)", type="password",
+                               help="Kept only in this browser session. Alternatives: env var GEMINI_API_KEY or .streamlit/secrets.toml. "
+                                    "Without a key the advisor writes an offline template summary.")
+    gemini_model = st.text_input("Gemini model", os.environ.get("GEMINI_MODEL", ADV.DEFAULT_MODEL))
+
+
+def _gemini_key():
+    if gemini_key.strip():
+        return gemini_key.strip()
+    try:
+        return st.secrets.get("GEMINI_API_KEY")      # raises if no secrets file exists
+    except Exception:
+        return None
 
 
 def make_cfg(**over):
@@ -280,6 +295,18 @@ with tabs[0]:
         st.caption("Logical error rates come from Stim/PyMatching surface-code MEMORY simulations; QAOA receives them as an effective bit-flip rate (modelled logical qubits). Resource-estimator constants are assumptions.")
     else:
         st.info("Run **Solve now** to see the circuit and noise numbers of the current instance.")
+
+    # ---- Gemini advisor: stock pick (computed by the optimiser code) + written summary (Gemini or offline template)
+    st.subheader("AI advisor (Gemini)")
+    st.caption("The stock ranking is computed from the optimisers' weights; Gemini only writes the explanation. Research demo - not financial advice.")
+    def _advisor_panel():
+        job = st.session_state.get("job")
+        if job is not None and job.state in ("done", "error") and st.session_state.get("_adv_rerun_for") != id(job):
+            st.session_state["_adv_rerun_for"] = id(job)
+            st.rerun()      # one full rerun when the solve finishes, so every panel (internals, advisor) sees the result
+        advisor_ui.render_panel(st, job, res_real, st.session_state.get("job_cfg", make_cfg()), _gemini_key(), gemini_model.strip(), esg=market.esg)
+    _jb = st.session_state.get("job")
+    st.fragment(run_every="1s" if (_jb is not None and _jb.state == "running") else None)(_advisor_panel)()
 
 # ============================================================================= BACKTEST
 with tabs[1]:

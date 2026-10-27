@@ -35,6 +35,20 @@ The quantum part only *optimises*; it does not predict or detect anything.
 * One environment: `requirements.txt` pins TensorFlow-CPU to a range that works with NumPy 2.x; `requirements-lock.txt` is the exact set the tests ran with. TensorFlow is imported only inside `stock_prediction/model.py`; if it conflicts with torch/Gurobi on your machine, train the models in a separate venv - the optimiser only needs the saved `models/*.keras`/`.json` through `ModelBank`.
 * Screenshots: `python scripts/screenshots_combined.py` (Playwright).
 
+## Gemini advisor: stock pick + written summary
+`qpo/advisor.py` turns one solve plus the fault-tolerance / backtest results into (a) a ranked stock pick and (b) a summary of *what was done, how, what the fault-tolerance results show, and what happens next*.
+* **The code picks, Gemini explains.** The pick is the stock with the highest average weight across the optimisers in the solve (equal-weight baseline excluded; tie-break: model-implied return/vol). Gemini receives only a JSON "evidence" bundle (weights, noise rates, Stim fit, resource estimates, mitigation ablation, backtest significance, data provenance) and writes the narrative. It cannot change the pick.
+* **Guardrails (tested, no network needed):** the JSON answer is validated; numbers and tickers that are not in the evidence are flagged and trigger one corrective retry; the honesty notes (stale data, "0 of N significant", simulated quantum hardware, ESG gaps) are added by code in `fixed_notes`, so the model cannot drop them. If there is no key, no internet, or Gemini fails, an offline template with the same structure is used.
+* **Stale data warning:** the shipped snapshot ends 2023-12-29. With it the pick is a demonstration and is labelled STALE with confidence capped at "low". Use `--live` (or the dashboard's *Live (Yahoo Finance)* switch) for current data.
+* Setup: create a key in Google AI Studio, then `set GEMINI_API_KEY=...` (PowerShell: `$env:GEMINI_API_KEY="..."`; bash: `export GEMINI_API_KEY=...`). **Never commit the key.** Default model `gemini-3.8-flash` (override with `--model` or `GEMINI_MODEL`; model names change, see the Gemini API changelog). The HTTP call uses only the standard library, so there is no new dependency. The evidence (market numbers, no personal data) is sent to Google's API.
+```
+python scripts/advise.py --check-gemini    # one tiny call: proves key, model name and endpoint (first thing to run)
+python scripts/advise.py                   # offline snapshot -> advice/advice_<date>.md + .json
+python scripts/advise.py --live            # extend with Yahoo bars first (internet)
+python scripts/advise.py --no-llm          # deterministic template, no network
+```
+In the dashboard (`streamlit run app.py`): sidebar *Gemini advisor* (key + model; or `.streamlit/secrets.toml` with `GEMINI_API_KEY`), press **Solve now**, then **Generate advice** in the *AI advisor (Gemini)* panel. Tests: `python -m pytest tests/test_advisor.py -q` (Gemini is mocked). **Status:** the live Gemini call itself has not been run by the author (no access to the API from the build sandbox); run `--check-gemini` first.
+
 ## Live data (A1) and what "streaming" means here
 `qpo/feed.py` defines the `next_bar()` hook: `YahooFeed` (polls Yahoo Finance for daily bars newer than the last one, rate-limited) and `ReplayFeed` (offline). `LiveOptimizer(feed=...)` consumes bars as they arrive; `catch_up()` extends the shipped snapshot (to 2023-12-29) to the latest bar. The dashboards have a **Live** data source and fall back to the snapshot, saying so, when Yahoo is unreachable. Yahoo daily bars are end-of-day and intraday quotes ~15 min delayed, so "live" = daily-bar granularity + delayed quotes; the "Streaming portfolio value" panel replays historical bars tick by tick and is labelled "streaming replay". The Yahoo code is tested with mocked payloads only (the build sandbox had no access to Yahoo).
 
@@ -59,6 +73,7 @@ Stim + PyMatching simulate a rotated-surface-code **memory** experiment (no logi
 | `qpo/backtest.py`, `qpo/stats.py` | walk-forward engine (no look-ahead; tested), Sharpe bootstrap, Wilcoxon, Holm |
 | `qpo/theory.py`, `docs/THEORY.md` | bounds P1–P6 |
 | `qpo/live.py`, `dashboard/app.py` | streaming re-optimisation + Streamlit UI |
+| `qpo/advisor.py`, `qpo/advisor_ui.py`, `scripts/advise.py` | Gemini advisor: deterministic stock pick + written summary (see "Gemini advisor" above) |
 | `scripts/` | `run_all.py`, `ablation.py`, `scaling.py` |
 | `results/` | outputs of one full run on synthetic data (reference) |
 
